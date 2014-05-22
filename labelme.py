@@ -789,6 +789,8 @@ class MainWindow(QMainWindow, WindowMixin):
             self.addRecentFile(filename)
             self.setClean()
 
+        # Export the json category to a mask image.
+
     def closeFile(self, _value=False):
         if not self.mayContinue():
             return

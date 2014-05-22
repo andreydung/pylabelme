@@ -19,6 +19,11 @@
 
 import json
 import os.path
+import cv2
+import numpy as np
+
+from PyQt4.QtGui import *
+from PyQt4.QtCore import *
 
 from base64 import b64encode, b64decode
 
@@ -64,8 +69,48 @@ class LabelFile(object):
                     imagePath=imagePath,
                     imageData=b64encode(imageData)),
                     f, ensure_ascii=True, indent=2)
+
+            # Also export the mask image
+            shape = QImage.fromData(imageData).size()
+            M = shape.height()
+            N = shape.width()
+            
+            maskfilepath = filename[:-4] + "_mask.png"
+            mask = np.zeros((M,N))
+            
+            for i in range(M):
+                for j in range(N):
+                    for shape in shapes:
+                        if self.point_in_poly(j,i,shape['points']):
+                            mask[i][j] = int(shape['label'])
+            
+            print np.unique(mask)
+            # mask = cv2.flip(mask, 0)
+
+            cv2.imwrite(str(maskfilepath), mask*20)
+
         except Exception, e:
             raise LabelFileError(e)
+
+    def point_in_poly(self, x, y, poly):
+        # point in polygon algorithm
+        # Ray casting method
+		n = len(poly)
+		inside = False
+
+		p1x,p1y = poly[0]
+		for i in range(n+1):
+			p2x,p2y = poly[i % n]
+			if y > min(p1y,p2y):
+				if y <= max(p1y,p2y):
+					if x <= max(p1x,p2x):
+						if p1y != p2y:
+							xints = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
+						if p1x == p2x or x <= xints:
+							inside = not inside
+			p1x,p1y = p2x,p2y
+
+		return inside
 
     @staticmethod
     def isLabelFile(filename):
