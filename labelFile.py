@@ -79,7 +79,6 @@ class LabelFile(object):
 			
 			for shape in shapes:
 				mask = self.polygon(M, N, shape['points'])
-				print mask
 				fullmask[mask] = int(shape['label'])
 			
 			np.savetxt(str(maskfilepath), fullmask, fmt = "%d")
