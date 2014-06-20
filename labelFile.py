@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Labelme.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+import cv2
 import json
 import os.path
 import numpy as np
@@ -74,19 +74,34 @@ class LabelFile(object):
 			M = shape.height()
 			N = shape.width()
 			
-			maskfilepath = filename[:-4] + "_truth.csv"
 			fullmask = np.zeros((M,N))
+
+			colors = np.array([[255,255,255],
+                   [0, 255, 0],
+                   [0, 0, 255],
+                   [255, 0, 0]
+                  ])
 			
 			for shape in shapes:
 				mask = self.polygon(M, N, shape['points'])
 				fullmask[mask] = int(shape['label'])
-			
+
+			fullmask = fullmask.astype(int)
+
+			maskfilepath = filename[:-4] + "_truth.csv"
+			masktestfilepath = filename[:-4] + "_mask.png"
+
 			np.savetxt(str(maskfilepath), fullmask, fmt = "%d")
+			cv2.imwrite(str(masktestfilepath), colors[fullmask])
 
 		except Exception, e:
 			raise LabelFileError(e)
 
 	def polygon(self, M, N, poly):
+		"""
+		Return a mask matrix
+		Where points inside the polygon is 1, outside is 0
+		"""
 		out = np.zeros((M, N)). astype(bool)
 
 		n = len(poly)
@@ -109,15 +124,13 @@ class LabelFile(object):
 				if (det != 0):
 					tmp = (A1 * C2 - A2 * C1)/det
 					if tmp >= min(v1_y, v2_y) and tmp <= max(v1_y, v2_y):
-						intersection_y.append(tmp)
+						intersection_y.append(int(tmp))
 
-			intersection_y = list(set(intersection_y))
+			intersection_y = sorted(list(set(intersection_y)))
 
-			if len(intersection_y) == 1:
-				intersection_y.append(intersection_y[0])
-
-			for k in range(1, len(intersection_y), 2):
-				out[intersection_x, intersection_y[k - 1]:intersection_y[k]] = True
+			if len(intersection_y) > 1:
+				for k in range(1, len(intersection_y), 2):
+					out[intersection_x, intersection_y[k - 1]:intersection_y[k]] = True
 
 		return out
 
