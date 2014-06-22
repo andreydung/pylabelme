@@ -25,6 +25,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
 from base64 import b64encode, b64decode
+import base64
 
 class LabelFileError(Exception):
 	pass
@@ -76,12 +77,14 @@ class LabelFile(object):
 			
 			fullmask = np.zeros((M,N))
 
+			# Lookup table
 			colors = np.array([[255,255,255],
-                   [0, 255, 0],
-                   [0, 0, 255],
-                   [255, 0, 0]
-                  ])
+				   [0, 255, 0],
+				   [0, 0, 255],
+				   [255, 0, 0]
+				  ])
 			
+			# combine mask of different labels
 			for shape in shapes:
 				mask = self.polygon(M, N, shape['points'])
 				fullmask[mask] = int(shape['label'])
