@@ -123,17 +123,17 @@ class LabelFile(object):
 				C2 = i
 
 				# find intersection
-				det = A1*B2 - A2*B1
-				if (det != 0):
-					tmp = (A1 * C2 - A2 * C1)/det
-					if tmp >= min(v1_y, v2_y) and tmp <= max(v1_y, v2_y):
+				if intersection_x >= min(v1_x, v2_x) and intersection_x <= max(v1_x, v2_x):
+					det = A1*B2 - A2*B1
+					if (det != 0):
+						tmp = (A1 * C2 - A2 * C1)/det
 						intersection_y.append(int(tmp))
 
 			intersection_y = sorted(list(set(intersection_y)))
 
 			if len(intersection_y) > 1:
 				for k in range(1, len(intersection_y), 2):
-					out[intersection_x, intersection_y[k - 1]:intersection_y[k]] = True
+					out[intersection_y[k - 1]:intersection_y[k], intersection_x] = True
 
 		return out
 
