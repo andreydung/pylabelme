@@ -37,14 +37,14 @@ def polygon(M, N, poly):
 	out = np.zeros((M, N)). astype(bool)
 
 	n = len(poly)
-	for i in range(M):
+	for i in range(N):
 		
 		# horizontal scanning
 		intersection_x = i
 		intersection_y = []
 
 		# check through all edges
-		for edge in range(n + 1):
+		for edge in range(n):
 			v1_x, v1_y = poly[edge % n]
 			v2_x, v2_y = poly[(edge + 1) % n]
 
@@ -64,15 +64,13 @@ def polygon(M, N, poly):
 			if intersection_x > min(v1_x, v2_x) and intersection_x <= max(v1_x, v2_x):
 				det = A1*B2 - A2*B1
 				if (det != 0):
-					tmp = (A1 * C2 - A2 * C1)/det
+					tmp = int((A1 * C2 - A2 * C1)/det)
 					intersection_y.append(tmp)
 
 		intersection_y = sorted(intersection_y)
-
 		if len(intersection_y) > 1:
 			for k in range(1, len(intersection_y), 2):
 				out[intersection_y[k - 1]:intersection_y[k], intersection_x] = True
-
 	return out
 
 def getABC(x1, y1, x2, y2):
@@ -130,24 +128,18 @@ class LabelFile(object):
 			M = shape.height()
 			N = shape.width()
 			
-			fullmask = np.zeros((M,N))
+			fullmask = np.zeros((M,N)).astype(int)
 
 			# Lookup table
-			colors = np.array([[255,255,255],
-				   [0, 255, 0],
-				   [0, 0, 255],
-				   [255, 0, 0],
-   				   [0, 128, 0],
-				   [0, 0, 128],
-				   [128, 0, 0]
-				  ])
+			colors = np.array([[0,128,128],
+							   [0, 0, 128],
+							   [0, 128, 0]])
 			
 			# combine mask of different labels
 			for shape in shapes:
-				mask = self.polygon(M, N, shape['points'])
+				mask = polygon(M, N, shape['points'])
 				fullmask[mask] = int(shape['label'])
-
-			fullmask = fullmask.astype(int)
+				print shape['label']
 
 			maskfilepath = filename[:-4] + "_truth.csv"
 			masktestfilepath = filename[:-4] + "_mask.png"
@@ -157,7 +149,6 @@ class LabelFile(object):
 
 		except Exception, e:
 			raise LabelFileError(e)
-
 
 	@staticmethod
 	def isLabelFile(filename):
