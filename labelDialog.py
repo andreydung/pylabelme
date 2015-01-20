@@ -48,6 +48,10 @@ class LabelDialog(QDialog):
     def validate(self):
         if self.edit.text().trimmed():
             self.accept()
+        try:
+            val = int(self.edit.text())
+        except ValueError:
+            QMessageBox.about(self, 'Error', "Must be an integer. This will be the label directly.")
 
     def postProcess(self):
         self.edit.setText(self.edit.text().trimmed())

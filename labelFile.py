@@ -16,16 +16,71 @@
 # You should have received a copy of the GNU General Public License
 # along with Labelme.  If not, see <http://www.gnu.org/licenses/>.
 #
+from __future__ import division
 import cv2
 import json
 import os.path
 import numpy as np
+import math
 
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
 from base64 import b64encode, b64decode
 import base64
+
+def polygon(M, N, poly):
+	"""
+	Return a mask matrix
+	Where points inside the polygon is 1, outside is 0
+	"""
+	out = np.zeros((M, N)). astype(bool)
+
+	n = len(poly)
+	for i in range(M):
+		
+		# horizontal scanning
+		intersection_x = i
+		intersection_y = []
+
+		# check through all edges
+		for edge in range(n + 1):
+			v1_x, v1_y = poly[edge % n]
+			v2_x, v2_y = poly[(edge + 1) % n]
+
+			v1_x = int(v1_x)
+			v1_y = int(v1_y)
+			v2_x = int(v2_x)
+			v2_y = int(v2_y)
+
+			assert (v1_x <= M and v2_x <= M and v1_y <= N and v2_y <= N)
+
+			A1, B1, C1 = getABC(v1_x, v1_y, v2_x, v2_y)
+			A2 = 1
+			B2 = 0
+			C2 = i
+
+			# find intersection
+			if intersection_x > min(v1_x, v2_x) and intersection_x <= max(v1_x, v2_x):
+				det = A1*B2 - A2*B1
+				if (det != 0):
+					tmp = (A1 * C2 - A2 * C1)/det
+					intersection_y.append(tmp)
+
+		intersection_y = sorted(intersection_y)
+
+		if len(intersection_y) > 1:
+			for k in range(1, len(intersection_y), 2):
+				out[intersection_y[k - 1]:intersection_y[k], intersection_x] = True
+
+	return out
+
+def getABC(x1, y1, x2, y2):
+	A = y2 - y1
+	B = x1 - x2
+	C = A*x1 + B*y1
+	return (A, B, C)
+
 
 class LabelFileError(Exception):
 	pass
@@ -81,7 +136,10 @@ class LabelFile(object):
 			colors = np.array([[255,255,255],
 				   [0, 255, 0],
 				   [0, 0, 255],
-				   [255, 0, 0]
+				   [255, 0, 0],
+   				   [0, 128, 0],
+				   [0, 0, 128],
+				   [128, 0, 0]
 				  ])
 			
 			# combine mask of different labels
@@ -100,48 +158,6 @@ class LabelFile(object):
 		except Exception, e:
 			raise LabelFileError(e)
 
-	def polygon(self, M, N, poly):
-		"""
-		Return a mask matrix
-		Where points inside the polygon is 1, outside is 0
-		"""
-		out = np.zeros((M, N)). astype(bool)
-
-		n = len(poly)
-		for i in range(M):
-			intersection_x = i
-			intersection_y = []
-
-			# check through all edges
-			for edge in range(n + 1):
-				v1_x, v1_y = poly[edge % n]
-				v2_x, v2_y = poly[(edge + 1) % n]
-
-				A1, B1, C1 = self.getABC(v1_x, v1_y, v2_x, v2_y)
-				A2 = 1
-				B2 = 0
-				C2 = i
-
-				# find intersection
-				if intersection_x >= min(v1_x, v2_x) and intersection_x <= max(v1_x, v2_x):
-					det = A1*B2 - A2*B1
-					if (det != 0):
-						tmp = (A1 * C2 - A2 * C1)/det
-						intersection_y.append(int(tmp))
-
-			intersection_y = sorted(list(set(intersection_y)))
-
-			if len(intersection_y) > 1:
-				for k in range(1, len(intersection_y), 2):
-					out[intersection_y[k - 1]:intersection_y[k], intersection_x] = True
-
-		return out
-
-	def getABC(self, x1, y1, x2, y2):
-		A = y2 - y1
-		B = x1 - x2
-		C = A*x1 + B*y1
-		return (A, B, C)
 
 	@staticmethod
 	def isLabelFile(filename):
