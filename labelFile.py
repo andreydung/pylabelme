@@ -53,7 +53,7 @@ def polygon(M, N, poly):
 			v2_x = int(v2_x)
 			v2_y = int(v2_y)
 
-			assert (v1_x <= M and v2_x <= M and v1_y <= N and v2_y <= N)
+			# assert (v1_x <= M and v2_x <= M and v1_y <= N and v2_y <= N)
 
 			A1, B1, C1 = getABC(v1_x, v1_y, v2_x, v2_y)
 			A2 = 1
@@ -123,6 +123,7 @@ class LabelFile(object):
 					imageData=b64encode(imageData)),
 					f, ensure_ascii=True, indent=2)
 
+			print "hello"
 			# Also export the mask image
 			shape = QImage.fromData(imageData).size()
 			M = shape.height()
