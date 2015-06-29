@@ -71,7 +71,7 @@ class Canvas(QWidget):
         self.menus = (QMenu(), QMenu())
         # Set widget options.
         self.setMouseTracking(True)
-        self.setFocusPolicy(Qt.WheelFocus)
+        # self.setFocusPolicy(Qt.WheelFocus)
 
     def enterEvent(self, ev):
         self.overrideCursor(self._cursor)
@@ -513,6 +513,10 @@ class Canvas(QWidget):
     def loadPixmap(self, pixmap):
         self.pixmap = pixmap
         self.shapes = []
+        self.repaint()
+
+    def updatePixmap(self, pixmap):
+        self.pixmap = pixmap
         self.repaint()
 
     def loadShapes(self, shapes):

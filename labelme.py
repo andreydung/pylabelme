@@ -87,6 +87,8 @@ class MainWindow(QMainWindow, WindowMixin):
         super(MainWindow, self).__init__()
         self.setWindowTitle(__appname__)
 
+        self.toggleImage = False
+
         # Whether we need to save or not.
         self.dirty = False
 
@@ -142,7 +144,6 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.shapeMoved.connect(self.setDirty)
         self.canvas.selectionChanged.connect(self.shapeSelectionChanged)
         self.canvas.drawingPolygon.connect(self.toggleDrawingSensitive)
-
         self.setCentralWidget(scroll)
         self.addDockWidget(Qt.RightDockWidgetArea, self.dock)
         self.dockFeatures = QDockWidget.DockWidgetClosable\
@@ -356,7 +357,6 @@ class MainWindow(QMainWindow, WindowMixin):
         #    QWhatsThis.enterWhatsThisMode()
 
     ## Support Functions ##
-
     def noShapes(self):
         return not self.itemsToShapes
 
@@ -422,6 +422,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.labelList.clear()
         self.filename = None
         self.imageData = None
+        self.imageData2 = None
         self.labelFile = None
         self.canvas.resetState()
 
@@ -560,7 +561,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         shapes = [format_shape(shape) for shape in self.canvas.shapes]
         try:
-            lf.save(filename, shapes, unicode(self.filename), self.imageData,
+            lf.save(filename, shapes, unicode(self.filename), self.imageData, self.imageData2,
                 self.lineColor.getRgb(), self.fillColor.getRgb())
             self.labelFile = lf
             self.filename = filename
@@ -677,8 +678,16 @@ class MainWindow(QMainWindow, WindowMixin):
                 return False
             self.status("Loaded %s" % os.path.basename(unicode(filename)))
             self.image = image
+            self.image1 = image
+
+            file2 = "/home/andrey/Dropbox/Hacking/Research/LLNL_PreProcessing/Images/ProcessedGoogle/03996037.png"
+            self.imageData2 = read(file2, None)
+            self.image2 = QImage(file2)
+            
+            self.image = self.image2
+
             self.filename = filename
-            self.canvas.loadPixmap(QPixmap.fromImage(image))
+            self.canvas.loadPixmap(QPixmap.fromImage(self.image))
             if self.labelFile:
                 self.loadLabels(self.labelFile.shapes)
             self.setClean()
@@ -689,6 +698,17 @@ class MainWindow(QMainWindow, WindowMixin):
             self.toggleActions(True)
             return True
         return False
+
+    def keyPressEvent(self, event):
+        print "keypress"
+        self.toggleImage = not self.toggleImage
+        if self.toggleImage:
+            self.image = self.image1
+        else:
+            self.image = self.image2
+        
+        self.canvas.updatePixmap(QPixmap.fromImage(self.image))
+        self.canvas.update()
 
     def resizeEvent(self, event):
         if self.canvas and not self.image.isNull()\

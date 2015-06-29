@@ -99,6 +99,7 @@ class LabelFile(object):
 				data = json.load(f)
 				imagePath = data['imagePath']
 				imageData = b64decode(data['imageData'])
+				imageData2 = b64decode(data['imageData2'])
 				lineColor = data['lineColor']
 				fillColor = data['fillColor']
 				shapes = ((s['label'], s['points'], s['line_color'], s['fill_color'])\
@@ -112,7 +113,7 @@ class LabelFile(object):
 		except Exception, e:
 			raise LabelFileError(e)
 
-	def save(self, filename, shapes, imagePath, imageData,
+	def save(self, filename, shapes, imagePath, imageData, imageData2,
 			lineColor=None, fillColor=None):
 		try:
 			with open(filename, 'wb') as f:
@@ -120,10 +121,10 @@ class LabelFile(object):
 					shapes=shapes,
 					lineColor=lineColor, fillColor=fillColor,
 					imagePath=imagePath,
-					imageData=b64encode(imageData)),
+					imageData=b64encode(imageData),
+					imageData2=b64encode(imageData2)),
 					f, ensure_ascii=True, indent=2)
 
-			print "hello"
 			# Also export the mask image
 			shape = QImage.fromData(imageData).size()
 			M = shape.height()
